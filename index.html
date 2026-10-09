@@ -232,13 +232,14 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
 <section id="limits">
   <div class="num">05 — SCOPE</div>
-  <h2>What the evidence does not show.</h2>
+  <h2>What JitterVLA enables.</h2>
   <div class="card"><ul class="lim">
-    <li>One generic point-mass plant with open-loop VLA predictions; closed-loop behaviour and task success are outside scope.</li>
-    <li>The three pipelines differ jointly in model, data and representation, so they are not a controlled model comparison.</li>
-    <li>The UR3 study is small and the accelerometer is uncalibrated.</li>
-    <li>All metrics are motion-quality proxies; comfort, trust and perceived safety were not measured.</li>
+    <li><b>Controlled motion-quality evaluation.</b> Paired replay holds command streams and arrival timing fixed, making controller trade-offs reproducible in a shared impedance plant.</li>
+    <li><b>Evidence across VLA pipelines.</b> Three action-generation pipelines test how timing and control shape motion across different data and representations, with replication on new episode draws.</li>
+    <li><b>A bridge to physical experiments.</b> Real UR3 replays provide an exploratory hardware check of the stepped-versus-interpolated controller contrast.</li>
+    <li><b>A foundation for human-centred evaluation.</b> Jerk, smoothness and tracking metrics help select controller conditions for future studies of comfort, trust and perceived safety.</li>
   </ul></div>
+  <p style="margin-top:16px">The benchmark focuses on the path from predicted commands to executed motion. Closed-loop task evaluation, broader hardware validation and human-subject studies are next steps.</p>
 </section>
 
 <section id="resources">
