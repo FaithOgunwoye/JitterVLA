@@ -220,6 +220,11 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
   <div class="num">04 — REAL UR3</div>
   <h2>A bounded physical check.</h2>
   <p class="tag">A UR3 CB3 at 125 Hz, replaying an author's teleoperation trace.</p>
+  <figure class="figcard" style="padding:0;overflow:hidden;background:#000">
+    <video src="static/video/ur3_teleop.mp4" poster="static/video/ur3_teleop_poster.jpg" autoplay muted loop playsinline controls preload="metadata" style="width:100%;display:block" aria-label="Overhead camera view of the real UR3 arm during a teleoperated reaching episode"></video>
+  </figure>
+  <figcaption>A teleoperation episode recorded on the real UR3 (overhead scene camera, real time, 10 s). It shows teleoperated motion, not a controller comparison; the episodes are in the <a href="https://huggingface.co/datasets/armteam/JitterVLA-teleop-episodes">released dataset</a>.</figcaption>
+  <div style="height:22px"></div>
   <figure class="figcard"><img src="static/img/hri27_physical.png" alt="(a) Real UR3 CB3 with an illustrative offset pose; (b) URSim rehearsal trace where interpolated control has lower peaks; (c) six positive paired B0−B2 differences in accelerometer-derived jerk." loading="lazy"></figure>
   <figcaption>(a) The real UR3 CB3 setup; the translucent offset pose is a conceptual illustration. (b) URSim rehearsal of the replay pipeline (software only). (c) Exploratory v1.2a session: each marker is one paired direct-mode repeat's B0 − B2 difference in p99 accelerometer-derived jerk.</figcaption>
   <p style="margin-top:16px">In the frozen v1.2 protocol (30 runs), position-derived jerk did not resolve the planned contrast at the logging resolution. An exploratory v1.2a session (30 runs) logged the tool-flange accelerometer: stepped control exceeded interpolated control in <b>all six</b> direct-mode pairs, with 3.0–14.0% lower jerk under interpolation. This shows the contrast can be observed on hardware; it does not validate the plant as a UR3 model and is not a calibrated or safety result.</p>
