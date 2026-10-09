@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JitterVLA: Replay Benchmark for Motion Quality</title>
+<meta name="description" content="JitterVLA replays identical robot command streams and arrival timing through alternative controllers to measure how timing and control shape executed motion in VLA-driven human-robot manipulation.">
+<meta property="og:title" content="JitterVLA: A Replay Benchmark for Motion Quality in VLA-Driven Human-Robot Manipulation">
+<meta property="og:description" content="Same commands, same delays, different controller: a paired-replay benchmark across 20 people, three VLA pipelines and a real UR3.">
+<meta property="og:image" content="static/img/teaser.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f5f7f8; --card:#ffffff; --ink:#14212b; --ink-2:#3d4c58; --muted:#6b7a88; --line:#e2e7eb;
+  --accent:#1F7A7A; --accent-soft:#e6f2f2; --amber:#C88A1E;
+  --b0:#46596B; --b2:#1F7A7A; --a2:#B0562B; --b3:#7A64A8; --grid:#9AA3AB;
+  --radius:14px; --shadow:0 1px 2px rgba(20,33,43,.05),0 8px 24px rgba(20,33,43,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1519; --bg-soft:#151d22; --card:#172127; --ink:#e8eef2; --ink-2:#c3ced6; --muted:#8d9ba6; --line:#26323a;
+    --accent:#4fb3b3; --accent-soft:#16302f; --b0:#8fa3b5; --b2:#4fb3b3; --a2:#df8a5f; --b3:#a893d6; --grid:#7d8790;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:22px;height:54px;overflow-x:auto;white-space:nowrap}
+nav .brand{font-weight:800;color:var(--ink);letter-spacing:-.01em} nav .brand span{color:var(--accent)}
+nav a.l{color:var(--ink-2);font-size:14px;font-weight:500}
+header{padding:64px 0 28px;text-align:center}
+.eyebrow{display:inline-block;font:500 12px/1 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:7px 11px;border-radius:999px}
+h1{font-size:clamp(30px,5vw,50px);line-height:1.1;letter-spacing:-.025em;margin:18px auto 10px;max-width:900px;font-weight:800}
+h1 .sys{color:var(--accent)}
+.sub{font-size:clamp(16px,2.2vw,20px);color:var(--ink-2);max-width:760px;margin:0 auto}
+.authors{margin:26px 0 4px;font-size:17px;font-weight:500;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 22px}
+.authors sup{color:var(--muted);font-weight:400}
+.affil{color:var(--muted);font-size:14px}
+.btns{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:26px 0 8px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;background:var(--ink);color:var(--bg);font-weight:600;font-size:14px;border:1px solid var(--ink)}
+.btn:hover{text-decoration:none;opacity:.88}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.off{background:transparent;color:var(--muted);border:1px dashed var(--line);cursor:default}
+.btn svg{width:16px;height:16px}
+figure{margin:0}
+.teaser{margin:30px 0 8px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.teaser img,.figcard img{width:100%;height:auto;display:block}
+figcaption{font-size:14px;color:var(--muted);margin-top:10px;line-height:1.5}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:34px 0 10px}
+.stat{background:var(--bg-soft);border:1px solid var(--line);border-radius:var(--radius);padding:18px 16px;text-align:center}
+.stat b{display:block;font-size:clamp(22px,3.4vw,32px);letter-spacing:-.02em;font-weight:800}
+.stat span{font-size:13px;color:var(--muted)}
+section{padding:58px 0 10px}
+.num{font:500 13px/1 "JetBrains Mono",monospace;color:var(--accent);letter-spacing:.06em}
+h2{font-size:clamp(24px,3.4vw,34px);letter-spacing:-.02em;line-height:1.2;margin:10px 0 6px;font-weight:800}
+.tag{font-size:18px;color:var(--ink-2);margin:0 0 22px}
+p{color:var(--ink-2);margin:0 0 14px;font-size:16.5px}
+.tldr{background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:10px;padding:18px 20px;margin:26px 0 0}
+.tldr p{margin:0;color:var(--ink)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 8px;font-size:17px}
+.card p{font-size:15px;margin:0}
+.ctrls{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:18px 0}
+.ctrl{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.ctrl i{flex:none;width:12px;height:12px;margin-top:6px}
+.ctrl b{display:block;font-size:14px} .ctrl span{font-size:13px;color:var(--muted)}
+.dot{border-radius:50%} .sq{border-radius:2px} .tri{width:0!important;height:0!important;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:12px solid var(--a2)} .dia{transform:rotate(45deg) scale(.82);border-radius:2px}
+.labels{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.pill{font:500 12.5px/1 "JetBrains Mono",monospace;padding:7px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink-2);background:var(--bg-soft)}
+.figcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);margin:8px 0 6px}
+.result{margin:34px 0 0}
+.result h3{font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
+.result .lab{font:500 12px/1 "JetBrains Mono",monospace;color:var(--muted);margin-bottom:10px;display:block}
+.chart{margin-top:6px}
+.toggle{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--bg-soft);margin-bottom:14px}
+.toggle button{border:0;background:transparent;color:var(--ink-2);font:600 13px Inter,sans-serif;padding:7px 14px;border-radius:999px;cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.row{display:grid;grid-template-columns:150px 1fr 120px;gap:12px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.row:last-child{border-bottom:0}
+.row .nm{font-weight:600} .row .nm small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.bar{height:14px;background:var(--bg-soft);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--b2);border-radius:999px;transition:width .5s ease}
+.row .v{font:500 13px "JetBrains Mono",monospace;text-align:right;color:var(--ink)}
+.row .v small{display:block;color:var(--muted)}
+.mini{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.mini div{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;background:var(--card)}
+.mini b{display:block;font-size:22px;font-weight:800} .mini span{font-size:12.5px;color:var(--muted)}
+.mini .hl{border-color:var(--amber)} .mini .hl b{color:var(--amber)}
+ul.lim{padding-left:18px;margin:0} ul.lim li{color:var(--ink-2);margin-bottom:8px}
+.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.res a,.res div{display:block;border:1px solid var(--line);border-radius:var(--radius);padding:18px;background:var(--card);color:var(--ink)}
+.res a:hover{border-color:var(--accent);text-decoration:none}
+.res b{display:block;font-size:16px;margin-bottom:4px} .res span{font-size:13.5px;color:var(--muted)}
+.res .soon{opacity:.75;border-style:dashed}
+pre{position:relative;background:var(--bg-soft);border:1px solid var(--line);border-radius:12px;padding:18px;overflow:auto;font:13px/1.55 "JetBrains Mono",monospace;color:var(--ink)}
+.copy{position:absolute;top:10px;right:10px;border:1px solid var(--line);background:var(--card);color:var(--ink-2);border-radius:8px;font:600 12px Inter,sans-serif;padding:6px 10px;cursor:pointer}
+footer{border-top:1px solid var(--line);margin-top:60px;padding:28px 0 40px;color:var(--muted);font-size:13.5px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media (max-width:760px){
+  .stats{grid-template-columns:repeat(2,1fr)} .grid2{grid-template-columns:1fr} .mini{grid-template-columns:repeat(2,1fr)}
+  .row{grid-template-columns:110px 1fr 86px}
+  header{padding-top:40px}
+}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="brand" href="#top">Jitter<span>VLA</span></a>
+  <a class="l" href="#overview">Overview</a><a class="l" href="#method">Method</a><a class="l" href="#results">Results</a><a class="l" href="#robot">Real UR3</a><a class="l" href="#resources">Resources</a>
+</div></nav>
+
+<main class="wrap" id="top">
+<header>
+  <span class="eyebrow">Benchmark · Human-Robot Interaction</span>
+  <h1><span class="sys">JitterVLA:</span> A Replay Benchmark for Motion Quality in VLA-Driven Human-Robot Manipulation</h1>
+  <p class="sub">Same commands. Same delays. Different controller. How command timing and low-level control shape the motion a person actually sees.</p>
+  <div class="authors">
+    <span>Faith Ogunwoye<sup>1</sup></span><span>Didar Seyidov<sup>2</sup></span><span>Konstantin Gubernatorov<sup>1</sup></span><span>Dzmitry Tsetserukou<sup>1</sup></span>
+  </div>
+  <div class="affil"><sup>1</sup>Intelligent Space Robotics Laboratory, Skoltech &nbsp;·&nbsp; <sup>2</sup>Skolkovo Institute of Science and Technology</div>
+  <div class="btns">
+    <a class="btn" href="static/JitterVLA.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Paper</a>
+    <span class="btn off" title="Link added once the preprint is announced">arXiv · soon</span>
+    <a class="btn ghost" href="https://huggingface.co/datasets/armteam/JitterVLA-teleop-episodes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>UR3 dataset</a>
+    <span class="btn off" title="Code is released after the review period">Code · after review</span>
+  </div>
+  <figure class="teaser">
+    <img src="static/img/teaser.png" alt="JitterVLA overview: command sources from human motion and three VLA pipelines pass through inference and network timing, are replayed identically through stepped, interpolated, entropy-gated, jerk-limited and constant-gain controllers, and produce a jerk–tracking trade-off checked on a real UR3." loading="eager">
+  </figure>
+  <figcaption>Commands from human motion and three VLA pipelines pass through inference and delivery timing. The <em>same</em> commands and arrivals are replayed through alternative controllers, and the resulting jerk–tracking trade-off identifies which conditions warrant physical and human-centred evaluation.</figcaption>
+  <div class="stats">
+    <div class="stat"><b>20</b><span>people (hand motion)</span></div>
+    <div class="stat"><b>838</b><span>VLA episodes, 3 pipelines</span></div>
+    <div class="stat"><b>69,988</b><span>paired replays</span></div>
+    <div class="stat"><b>60</b><span>real UR3 runs</span></div>
+  </div>
+</header>
+
+<section id="overview">
+  <div class="num">01 — OVERVIEW</div>
+  <h2>A sensible action can still become abrupt motion.</h2>
+  <p class="tag">What a person experiences is not the predicted action but the motion the robot executes.</p>
+  <p>Vision-language-action (VLA) policies run at a few hertz, far below a robot's control loop, and remote or shared inference adds network delay. Their targets arrive sparsely and at irregular times, so the low-level controller receives discontinuous goals. Remedies exist at several layers (action chunking, interpolation, jerk-limited trajectory generation, stiffness adaptation), but each is evaluated on its own streams, delays, plant and metrics, so they cannot be compared fairly.</p>
+  <p>JitterVLA evaluates the middle of that chain (command stream, timing, controller, executed motion) before candidate behaviours are shown to people. It does not replace human studies; it tells you which conditions deserve one.</p>
+  <div class="tldr"><p><b>Key results.</b> Interpolation lowered modeled p99 jerk for every source, by 83% (615 → 106 m/s³) on human motion with 200 ms delay, at a 2.0 cm tracking cost, and the effect replicated on 598 new episodes. Uncertainty–discontinuity associations had opposite, replicated signs in two VLA pipelines. On a real UR3, interpolation lowered accelerometer-derived jerk by 3.0–14.0% in all six exploratory pairs.</p></div>
+</section>
+
+<section id="method">
+  <div class="num">02 — METHOD</div>
+  <h2>Paired replay isolates the controller.</h2>
+  <p class="tag">Every controller sees the same source and the same delay realization, so differences are attributable to the controller.</p>
+  <div class="grid2">
+    <div class="card"><h3>Timing pipeline</h3><p>Measured VLA inference service times feed a single-worker FIFO queue. A network delay is then added: none, Gamma-distributed with mean 0–400 ms, or sequential samples from 12 h of measured LAN, internet and HTTPS traces. Separating mean delay from its spread tests <b>jitter</b>, not only latency.</p></div>
+    <div class="card"><h3>Plant and metrics</h3><p>Delivered targets drive a generic point-mass impedance plant (3 kg, 20 ms force lag, 3000 N/s force-rate cap, 1 ms steps). We report p99 and RMS jerk, tracking RMSE against the undelayed reference, and the dimensionless smoothness measures LDLJ and SPARC. These are motion-quality proxies, not comfort or safety measures.</p></div>
+  </div>
+  <div class="ctrls">
+    <div class="ctrl"><i class="dot" style="background:var(--b0)"></i><div><b>B0 · stepped</b><span>holds each delivered target</span></div></div>
+    <div class="ctrl"><i class="sq" style="background:var(--b2)"></i><div><b>B2 · interpolated</b><span>linear over one command period</span></div></div>
+    <div class="ctrl"><i class="tri"></i><div><b>A2 · entropy-gated</b><span>uncertainty-gated stiffness</span></div></div>
+    <div class="ctrl"><i class="dia" style="background:var(--b3)"></i><div><b>B3 · jerk-limited</b><span>Ruckig, 25 m/s³ limit</span></div></div>
+    <div class="ctrl"><i class="dot" style="background:var(--grid);width:8px;height:8px;margin-top:8px"></i><div><b>Constant-gain grid</b><span>best attainable fixed gain</span></div></div>
+  </div>
+  <p><b>Evidence hierarchy.</b> Protocols were frozen before data were seen, and results are never pooled across labels:</p>
+  <div class="labels"><span class="pill">frozen · v1.1, v1.3</span><span class="pill">replication · v1.4 (new episodes)</span><span class="pill">post-outcome · v1.5</span><span class="pill">exploratory hardware · v1.2a</span></div>
+</section>
+
+<section id="results">
+  <div class="num">03 — RESULTS</div>
+  <h2>A consistent trade-off, and a heuristic that fails.</h2>
+  <p class="tag">Synthetic reaches, hand trajectories from 20 people, OpenVLA, pi0-FAST and pi0.5.</p>
+
+  <div class="result">
+    <h3>Interpolation trades jerk for tracking on every source</h3>
+    <span class="lab">Frozen + replicated · B2 − B0 at zero added delay</span>
+    <div class="toggle" role="group" aria-label="Episode set">
+      <button type="button" aria-pressed="true" data-set="orig">Original episodes</button>
+      <button type="button" aria-pressed="false" data-set="rep">New-draw replication</button>
+    </div>
+    <div class="card chart" id="chart"></div>
+    <figcaption>Bar length: reduction in modeled p99 jerk (m/s³). Right: jerk change and tracking-RMSE cost (cm). Synthetic and human sources have no new-draw set.</figcaption>
+    <p style="margin-top:18px"><b>Timing spread, not mean delay, drove stepped-goal jerk.</b> In the frozen sweep on synthetic reaches, pure fixed delays left stepped p99 jerk unchanged, while a delay <em>spread</em> raised it:</p>
+    <div class="mini">
+      <div><b>535</b><span>fixed 0 ms</span></div><div><b>534</b><span>fixed 200 ms</span></div><div><b>533</b><span>fixed 400 ms</span></div><div class="hl"><b>623</b><span>200 ms mean, spread</span></div>
+    </div>
+  </div>
+
+  <div class="result">
+    <h3>Lower jerk is not free</h3>
+    <span class="lab">20 people · 200 ms mean Gamma delay</span>
+    <div class="grid2">
+      <figure class="figcard"><img src="static/img/hri27_frontier.png" alt="Jerk–tracking frontier: stepped B0 615 m/s³ at 9.91 cm; interpolated B2 106 at 11.87 cm; jerk-limited B3 23.5 at 14.79 cm; entropy-gated A2 150 at 16.72 cm." loading="lazy"></figure>
+      <div>
+        <p>Stepped B0 averages 615 m/s³ at 9.91 cm tracking error. Interpolation (B2) moves to 106 m/s³ at 11.87 cm. Jerk-limited B3 reaches 23.5 m/s³, but at 14.79 cm. Entropy-gated A2 (150 m/s³, 16.72 cm) is <b>worse than B2 on both axes</b> for human input.</p>
+        <p>The benchmark identifies a useful intervention, a costly one, and a plausible heuristic that fails.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="result">
+    <h3>Uncertainty is representation-dependent</h3>
+    <span class="lab">Frozen + replicated on new episodes</span>
+    <div class="grid2">
+      <div>
+        <p>In OpenVLA, token entropy was weakly <em>negatively</em> associated with the successive goal step (ρ = −.065; new draw −.089). In pi0-FAST, chunk entropy was <em>positively</em> associated with the chunk-boundary jump (ρ = .221; new draw .217). <b>Both directions replicated.</b></p>
+        <p>Whether uncertainty tracks downstream discontinuity depends on the pipeline, so uncertainty-based control needs pipeline-specific validation. Entropy gating helped on pi0-FAST and not on OpenVLA; all 28 planned pi0-FAST contrasts and 22 of 28 OpenVLA contrasts replicated.</p>
+      </div>
+      <figure class="figcard"><img src="static/img/hri27_uncertainty.png" alt="Entropy vs command discontinuity: OpenVLA negative and pi0-FAST positive in both original and new-draw episodes; no interval crosses zero." loading="lazy"></figure>
+    </div>
+  </div>
+</section>
+
+<section id="robot">
+  <div class="num">04 — REAL UR3</div>
+  <h2>A bounded physical check.</h2>
+  <p class="tag">A UR3 CB3 at 125 Hz, replaying an author's teleoperation trace.</p>
+  <figure class="figcard"><img src="static/img/hri27_physical.png" alt="(a) Real UR3 CB3 with an illustrative offset pose; (b) URSim rehearsal trace where interpolated control has lower peaks; (c) six positive paired B0−B2 differences in accelerometer-derived jerk." loading="lazy"></figure>
+  <figcaption>(a) The real UR3 CB3 setup; the translucent offset pose is a conceptual illustration. (b) URSim rehearsal of the replay pipeline (software only). (c) Exploratory v1.2a session: each marker is one paired direct-mode repeat's B0 − B2 difference in p99 accelerometer-derived jerk.</figcaption>
+  <p style="margin-top:16px">In the frozen v1.2 protocol (30 runs), position-derived jerk did not resolve the planned contrast at the logging resolution. An exploratory v1.2a session (30 runs) logged the tool-flange accelerometer: stepped control exceeded interpolated control in <b>all six</b> direct-mode pairs, with 3.0–14.0% lower jerk under interpolation. This shows the contrast can be observed on hardware; it does not validate the plant as a UR3 model and is not a calibrated or safety result.</p>
+</section>
+
+<section id="limits">
+  <div class="num">05 — SCOPE</div>
+  <h2>What the evidence does not show.</h2>
+  <div class="card"><ul class="lim">
+    <li>One generic point-mass plant with open-loop VLA predictions; closed-loop behaviour and task success are outside scope.</li>
+    <li>The three pipelines differ jointly in model, data and representation, so they are not a controlled model comparison.</li>
+    <li>The UR3 study is small and the accelerometer is uncalibrated.</li>
+    <li>All metrics are motion-quality proxies; comfort, trust and perceived safety were not measured.</li>
+  </ul></div>
+</section>
+
+<section id="resources">
+  <div class="num">06 — RESOURCES</div>
+  <h2>Paper, data and code.</h2>
+  <div class="res">
+    <a href="static/JitterVLA.pdf"><b>Paper (PDF)</b><span>Preprint, 5 pages</span></a>
+    <div class="soon"><b>arXiv</b><span>Link added once announced</span></div>
+    <a href="https://huggingface.co/datasets/armteam/JitterVLA-teleop-episodes"><b>UR3 teleoperation episodes</b><span>29 episodes · Hugging Face</span></a>
+    <div class="soon"><b>Code &amp; benchmark data</b><span>Apache-2.0 · released after the review period</span></div>
+  </div>
+  <h3 style="margin:30px 0 8px;font-size:17px">Citation</h3>
+  <pre id="bib">@misc{ogunwoye2026jittervla,
+  title  = {JitterVLA: A Replay Benchmark for Motion Quality in
+            VLA-Driven Human-Robot Manipulation},
+  author = {Ogunwoye, Faith and Seyidov, Didar and
+            Gubernatorov, Konstantin and Tsetserukou, Dzmitry},
+  year   = {2026},
+  note   = {Preprint}
+}<button class="copy" type="button" id="copybib">Copy BibTeX</button></pre>
+</section>
+</main>
+
+<footer><div class="wrap">
+  <span>JitterVLA · Intelligent Space Robotics Laboratory, Skoltech</span>
+  <a href="#top">Back to top ↑</a>
+</div></footer>
+
+<script>
+const DATA = {
+  orig: [["Synthetic","10 reaches",-504,2.39],["Human","20 people",-521,2.32],["OpenVLA","80 episodes",-202,0.78],["pi0-FAST","80 episodes",-371,0.28],["pi0.5","80 episodes",-374,0.56]],
+  rep:  [["Synthetic","no new draw",null,null],["Human","no new draw",null,null],["OpenVLA","200 episodes",-193,0.77],["pi0-FAST","199 episodes",-343,0.26],["pi0.5","199 episodes",-363,0.54]]
+};
+const chart = document.getElementById('chart');
+function draw(set){
+  const max = 521;
+  chart.innerHTML = DATA[set].map(([n,s,dj,dr]) => `
+    <div class="row"><div class="nm">${n}<small>${s}</small></div>
+      <div class="bar"><i style="width:${dj===null?0:(Math.abs(dj)/max*100).toFixed(1)}%"></i></div>
+      <div class="v">${dj===null?'—':dj+' m/s³'}<small>${dr===null?'':'+'+dr.toFixed(2)+' cm'}</small></div></div>`).join('');
+}
+document.querySelectorAll('.toggle button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.toggle button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  draw(b.dataset.set);
+}));
+draw('orig');
+document.getElementById('copybib').addEventListener('click', e => {
+  const text = document.getElementById('bib').firstChild.textContent;
+  navigator.clipboard.writeText(text).then(() => { e.target.textContent = 'Copied'; setTimeout(() => e.target.textContent = 'Copy BibTeX', 1500); });
+});
+</script>
+</body>
+</html>
